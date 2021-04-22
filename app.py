@@ -1,4 +1,4 @@
-from flask import Flask , render_template, request
+from flask import Flask , render_template, request,redirect
 from data import Articles
 import pymysql
 app = Flask(__name__)
@@ -11,13 +11,16 @@ db = pymysql.connect(
   db = 'busan'
 )
 
+
 @app.route('/', methods=['GET'])
 def index():
   # return "Hello World"
   return render_template("index.html", data="KIM")
+
 @app.route('/about')
 def about():
   return render_template("about.html", hello = "Gary Kim")
+
 @app.route('/articles')
 def articles():
   cursor = db.cursor()
@@ -25,54 +28,55 @@ def articles():
   cursor.execute(sql)
   topics = cursor.fetchall()
   print(topics)
-  #articles = Articles()
+  # articles = Articles()
   # print(articles[0]['title'])
   return render_template("articles.html", articles = topics)
 
 @app.route('/article/<int:id>')
 def article(id):
   cursor = db.cursor()
-  sql = 'SELECT * FROM WHERE id ={}'.format(id)
+  sql = 'SELECT * FROM topic WHERE id={}'.format(id)
   cursor.execute(sql)
-  topics = cursor.fetchall()
-  print(topics)
-  #articles = Articles()
-  #article = articles[id-1]
-  #print(articles[id-1])
+  topic = cursor.fetchone()
+  print(topic)
+  # articles = Articles()
+  # article = articles[id-1]
+  # print(articles[id-1])
   return render_template("article.html" , article = topic)
 
 @app.route('/add_articles', methods=["GET", "POST"])
 def add_articles():
-     cursor = db.cursor()
-     if request.method == "POST":
-          author = request.form['author']
-          title = request.form['title']
-          desc = request.form['desc']
-          
-          sql_3 = "INSERT INTO `topic` (`title`, `body`, `author`) VALUES (%s, %s, %s);"
-          input_data =[title,desc,author]
-          print(request.form['author'])
-          return "Success"
-          
-          cursor.execute(sql, input_data)
-          db.commit()
-          print(cursor.rowcount)
-          #db.close()
-          return redirect("/articles")
-     #return "<h1>글쓰기 페이지</h1>"
-     else:
-      return render_template("add_articles.html")
+  cursor = db.cursor()
+  if request.method == "POST":
+    author = request.form['author']
+    title = request.form['title']
+    desc = request.form['desc']
 
-@app.route('/delete/<int:id>', methods=['POST'])
+    sql = "INSERT INTO `topic` (`title`, `body`, `author`) VALUES (%s, %s, %s);"
+    input_data = [title,desc,author ]
+    print(request.form['desc'])
+
+    cursor.execute(sql, input_data)
+    db.commit()
+    print(cursor.rowcount)
+    # db.close()
+    return redirect("/articles")
+
+  # return "<h1>글쓰기 페이지</h1>"
+  else:
+    return render_template("add_articles.html")
+
+@app.route('/delete/<int:id>' , methods=['POST'])
 def delete(id):
-     cursor = db.cursor()
-     #sql = 'DELETE FROM topic WHERE id = %s;'
-     #id = [id]
-     #cursor.execute(sql)
-     sql = 'DELETE FROM topic WHERE id = {};'.format(id)
-     cursor.execute(sql)
-     db.commit()
-     return redirect("/articles")
+  cursor = db.cursor()
+  # sql = 'DELETE FROM topic WHERE id = %s;'
+  # id = [id]
+  # cursor.execute(sql , id)
+  sql = 'DELETE FROM topic WHERE id = {};'.format(id)
+  cursor.execute(sql)
+  db.commit()
+
+  return redirect("/articles")
 
 if __name__ == '__main__':
   app.run()
